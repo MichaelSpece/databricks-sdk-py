@@ -359,7 +359,7 @@ class Config:
             self.host = f"{o.scheme}://{o.netloc}"
 
     def _set_inner_config(self, keyword_args: Dict[str, any]):
-        for attr in self.attributes():
+        for attr in Config.attributes():
             if attr.name not in keyword_args:
                 continue
             if keyword_args.get(attr.name, None) is None:
