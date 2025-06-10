@@ -299,3 +299,18 @@ def test_config_auth_type_from_env(monkeypatch):
 
     assert cfg.auth_type == "basic"
     assert cfg.host == "https://x"
+
+def test_config_subclass_respects_auth_type_host_token_env(monkeypatch):
+    monkeypatch.setenv('DATABRICKS_HOST', 'x')
+    monkeypatch.setenv('DATABRICKS_TOKEN', 'x')
+    _auth_type = "something"
+
+    class DatabricksConfig(Config):
+        auth_type = _auth_type
+
+        def __init__(self):
+            super().__init__()
+    
+    cfg = DatabricksConfig()
+
+    assert cfg.auth_type == _auth_type
