@@ -309,12 +309,12 @@ def test_config_subclass_respects_auth_type_host_token_env(monkeypatch):
     monkeypatch.setenv('DATABRICKS_HOST', 'x')
     monkeypatch.setenv('DATABRICKS_TOKEN', 'x')
 
-    class DatabricksConfig(Config):
+    class Config(Config):  # Shadow.
         auth_type = _auth_type
 
         def __init__(self):
             super().__init__()
     
-    cfg = DatabricksConfig()
+    cfg = Config()
 
     assert cfg.auth_type == _auth_type

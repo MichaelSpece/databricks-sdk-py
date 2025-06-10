@@ -3,13 +3,39 @@
 from databricks.sdk.core import Config
 from .conftest import raises, __tests__
 
-{{range .}}{{- with .AssertError}}@raises("{{.}}"){{end}}
-def {{.SnakeName}}({{if .Env}}monkeypatch{{end}}):{{range $k,$v := .Env}}
-    monkeypatch.setenv('{{$k}}', {{if or (eq $k "HOME") (eq $k "PATH")}}__tests__ + '/{{$v}}'{{else}}'{{$v}}'{{end}}){{end}}
-    cfg = Config({{range $i,$v := .Fields}}{{if $i}}, {{end}}{{.Key}}='{{.Value}}'{{end}})
-    {{with .AssertAuth}}
-    assert cfg.auth_type == '{{.}}'{{end}}{{with .AssertHost}}
-    assert cfg.host == '{{.}}'{{end}}{{if .AssertAzure}}
-    assert cfg.is_azure{{end}}
+{{- range . }}
+  {{- with .AssertError }}
+@raises("{{ . }}")
+  {{- end }}
 
-{{end}}
+def {{ .SnakeName }}({{ if .Env }}monkeypatch{{ end }}):
+  {{- /* Set up any environment overrides */}}
+  {{- range $k, $v := .Env }}
+    monkeypatch.setenv(
+      '{{ $k }}',
+      {{ if or (eq $k "HOME") (eq $k "PATH") }}__tests__ + '/{{ $v }}'{{ else }}'{{ $v }}'{{ end }}
+    )
+  {{- end }}
+
+  {{- /* Optional Shadow of Config */}}
+  {{- if .Shadow }}
+    class Config(Config):  # Shadow.
+        auth_type = _auth_type
+
+        def __init__(self):
+            super().__init__()
+  {{- end }}
+
+  {{- /* Instantiate and assert */}}
+  cfg = Config({{ range $i, $f := .Fields }}{{ if $i }}, {{ end }}{{ $f.Key }}='{{ $f.Value }}'{{ end }})
+  {{- with .AssertAuth }}
+  assert cfg.auth_type == '{{ . }}'
+  {{- end }}
+  {{- with .AssertHost }}
+  assert cfg.host == '{{ . }}'
+  {{- end }}
+  {{- if .AssertAzure }}
+  assert cfg.is_azure
+  {{- end }}
+
+{{ end }}
